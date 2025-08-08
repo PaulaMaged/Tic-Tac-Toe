@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "checkJs": true,
+        "experimentalDecorators": true
+    },
+    "include": ["**/*.js", "**/*.html"],
+    "exclude": ["node_modules"]
+}

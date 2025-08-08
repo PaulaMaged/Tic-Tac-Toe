@@ -1,17 +1,17 @@
 const gameBoard = (function () {
-  const generateBoard = () => {
+  const generateBoard = (emptyToken) => {
     let board = [];
     for (let i = 0; i < 3; i++) {
       board[i] = [];
       for (let j = 0; j < 3; j++) {
-        board[i].push(Cell(i, j));
+        board[i].push(Cell(emptyToken, i, j));
       }
     }
 
     return board;
   };
 
-  const printBoard = () => {
+  const printBoard = (board) => {
     let stringOutput = "";
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 3; j++) {
@@ -33,8 +33,8 @@ const gameBoard = (function () {
   return { generateBoard, printBoard };
 })();
 
-function Cell(i, j) {
-  let token = 0;
+function Cell(emptyToken, i, j) {
+  let token = emptyToken;
   const position = { row: i, column: j };
 
   const getToken = () => token;
@@ -49,17 +49,20 @@ function Cell(i, j) {
 
 const gameController = (function (
   playerOneName = "Player One",
-  playerTwoName = "Player Two"
+  playerOneToken = "X",
+  playerTwoName = "Player Two",
+  playerTwoToken = "O",
+  emptyToken = ""
 ) {
   const players = [
     {
       name: playerOneName,
-      token: 1,
+      token: playerOneToken,
       wins: 0,
     },
     {
       name: playerTwoName,
-      token: 2,
+      token: playerTwoToken,
       wins: 0,
     },
   ];
@@ -71,7 +74,7 @@ const gameController = (function (
 
   const startNewGame = () => {
     isGameRunning = true;
-    board = gameBoard.generateBoard();
+    board = gameBoard.generateBoard(emptyToken);
 
     //reset wins
     for (let player of players) {
@@ -107,7 +110,8 @@ const gameController = (function (
   };
 
   const isValidMove = (i, j) => {
-    if (board[i][j].getToken() != 0) {
+    console.log({ i, j });
+    if (board[i][j].getToken() != emptyToken) {
       console.log("Invalid move, cell is occupied!");
       return false;
     } else if (i < 0 || i > 2 || j < 0 || j > 2) {
@@ -119,7 +123,7 @@ const gameController = (function (
   };
 
   const isGameEnd = (lastCellPlayed) => {
-    currentToken = lastCellPlayed.getToken();
+    const currentToken = lastCellPlayed.getToken();
 
     //check horizontal
     const row = lastCellPlayed.getPosition().row;
@@ -177,7 +181,7 @@ const gameController = (function (
 
   const endGame = () => {
     console.log(`${activePlayer.name} Won!`);
-    printBoard();
+    gameBoard.printBoard(board);
     console.log(`${players[0].name}:`);
   };
 
@@ -198,3 +202,56 @@ const gameController = (function (
     restartGame,
   };
 })();
+
+const screenController = ((gameController) => {
+  //Cache DOM elements
+  const elBoard = document.querySelector(".board");
+
+  //create necessary layout for displaying information
+  const init = () => {
+    gameController.startNewGame();
+    //create and add elements to status
+    for (let i = 0; i < 9; i++) {
+      const gameCell = document.createElement("div");
+      gameCell.textContent = "X";
+      gameCell.classList.add("cell");
+      const gameCellContainer = document.createElement("div");
+      gameCellContainer.addEventListener("click", handleOnClick);
+      gameCellContainer.dataset.position = i.toString();
+      gameCellContainer.classList.add("cell-container");
+      gameCellContainer.appendChild(gameCell);
+      elBoard.appendChild(gameCellContainer);
+    }
+  };
+
+  //render board and status (active player and win count)
+  const render = () => {};
+
+  function random(number) {
+    return Math.floor(Math.random() * (number + 1));
+  }
+
+  //register events from clicking cells on game board
+  function handleOnClick(e) {
+    const ordinalPosition = e.currentTarget.dataset.position;
+    const row = Math.trunc(ordinalPosition / 3);
+    const column = ordinalPosition % 3;
+    gameController.playRound(row, column);
+    console.log({ ordinalPosition, row, column });
+  }
+
+  //invoke restart game method
+  const restartGame = () => {};
+
+  //invoke startNewGame method
+  const startNewGame = () => {};
+
+  return {
+    init,
+    render,
+    restartGame,
+    startNewGame,
+  };
+})(gameController);
+
+screenController.init();
