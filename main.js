@@ -1,18 +1,4 @@
-const game = (function (
-  playerOneName = "Player One",
-  playerTwoName = "Player Two"
-) {
-  const players = [
-    {
-      name: playerOneName,
-      token: 1,
-    },
-    {
-      name: playerTwoName,
-      token: 2,
-    },
-  ];
-
+const gameBoard = (function () {
   const generateBoard = () => {
     let board = [];
     for (let i = 0; i < 3; i++) {
@@ -24,9 +10,6 @@ const game = (function (
 
     return board;
   };
-
-  let activePlayer = players[0];
-  let board = generateBoard();
 
   const printBoard = () => {
     let stringOutput = "";
@@ -47,23 +30,65 @@ const game = (function (
     console.log(stringOutput);
   };
 
-  function Cell(i, j) {
-    let token = 0;
-    const position = { row: i, column: j };
+  return { generateBoard, printBoard };
+})();
 
-    const getToken = () => token;
-    const setToken = (value) => (token = value);
-    const getPosition = () => position;
-    return {
-      setToken,
-      getToken,
-      getPosition,
-    };
-  }
+function Cell(i, j) {
+  let token = 0;
+  const position = { row: i, column: j };
 
-  const setPlayerNames = (playerOneName, playerTwoName) => {
-    players[0].name = playerOneName;
-    players[1].name = playerTwoName;
+  const getToken = () => token;
+  const setToken = (value) => (token = value);
+  const getPosition = () => position;
+  return {
+    setToken,
+    getToken,
+    getPosition,
+  };
+}
+
+const gameController = (function (
+  playerOneName = "Player One",
+  playerTwoName = "Player Two"
+) {
+  const players = [
+    {
+      name: playerOneName,
+      token: 1,
+      wins: 0,
+    },
+    {
+      name: playerTwoName,
+      token: 2,
+      wins: 0,
+    },
+  ];
+
+  let isGameRunning = false;
+  let startingPlayer = players[0];
+  let activePlayer = players[0];
+  let board;
+
+  const startNewGame = () => {
+    isGameRunning = true;
+    board = gameBoard.generateBoard();
+
+    //reset wins
+    for (let player of players) {
+      player.wins = 0;
+    }
+
+    activePlayer = players[0];
+  };
+
+  const getBoard = () => {
+    let boardRep = [];
+    for (let i = 0; i < 3; i++) {
+      boardRep[i] = [];
+      for (let j = 0; j < 3; j++) {
+        boardRep[i].push(board[i][j].getToken());
+      }
+    }
   };
 
   const playRound = (i, j) => {
@@ -153,16 +178,23 @@ const game = (function (
   const endGame = () => {
     console.log(`${activePlayer.name} Won!`);
     printBoard();
-    restartGame();
+    console.log(`${players[0].name}:`);
   };
 
   const restartGame = () => {
-    activePlayer = players[0];
-    board = generateBoard();
+    activePlayer = startingPlayer == players[0] ? players[1] : players[0];
+    board = board.generateBoard();
+  };
+
+  const getStatus = () => {
+    return [Object.assign({}, players[0]), Object.assign({}, players[1])];
   };
 
   return {
-    setPlayerNames,
+    startNewGame,
     playRound,
+    getStatus,
+    getBoard,
+    restartGame,
   };
 })();
