@@ -9,8 +9,75 @@
     </head>
     <body>
         <div class="game-container">
-            <div class="board"></div>
+            <h1 class="game-title">Tic Tac Toe</h1>
+            <div class="players-stats-container">
+                <div class="player-card">
+                    <div class="player-name-container">
+                        <h3 class="player-name">Player X</h3>
+                        <button class="bt-edit-player-name">
+                            <?xml version="1.0" encoding="utf-8"?>
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <g id="Edit / Edit_Pencil_01">
+                                    <path
+                                        id="Vector"
+                                        d="M12 8.00012L4 16.0001V20.0001L8 20.0001L16 12.0001M12 8.00012L14.8686 5.13146L14.8704 5.12976C15.2652 4.73488 15.463 4.53709 15.691 4.46301C15.8919 4.39775 16.1082 4.39775 16.3091 4.46301C16.5369 4.53704 16.7345 4.7346 17.1288 5.12892L18.8686 6.86872C19.2646 7.26474 19.4627 7.46284 19.5369 7.69117C19.6022 7.89201 19.6021 8.10835 19.5369 8.3092C19.4628 8.53736 19.265 8.73516 18.8695 9.13061L18.8686 9.13146L16 12.0001M12 8.00012L16 12.0001"
+                                        stroke="#000000"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </g>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="player-marker">X</p>
+                    <p class="win-score">Wins: 0</p>
+                </div>
+                <div class="player-card">
+                    <div class="player-name-container">
+                        <h3 class="player-name">Player O</h3>
+                        <button class="bt-edit-player-name">
+                            <?xml version="1.0" encoding="utf-8"?>
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <g id="Edit / Edit_Pencil_01">
+                                    <path
+                                        id="Vector"
+                                        d="M12 8.00012L4 16.0001V20.0001L8 20.0001L16 12.0001M12 8.00012L14.8686 5.13146L14.8704 5.12976C15.2652 4.73488 15.463 4.53709 15.691 4.46301C15.8919 4.39775 16.1082 4.39775 16.3091 4.46301C16.5369 4.53704 16.7345 4.7346 17.1288 5.12892L18.8686 6.86872C19.2646 7.26474 19.4627 7.46284 19.5369 7.69117C19.6022 7.89201 19.6021 8.10835 19.5369 8.3092C19.4628 8.53736 19.265 8.73516 18.8695 9.13061L18.8686 9.13146L16 12.0001M12 8.00012L16 12.0001"
+                                        stroke="#000000"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </g>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="player-marker">O</p>
+                    <p class="win-score">Wins: 0</p>
+                </div>
+            </div>
             <div class="game-status"></div>
+            <div class="board"></div>
+            <div class="control-buttons-container">
+                <button class="bt-new-game">New Game</button>
+                <button class="bt-reset-stats">Reset Stats</button>
+            </div>
+            <div class="game-instructions-card">
+                <h4 class="game-instructions-header">How to Play:</h4>
+                <p class="game-instructions-paragraph">
+                    Get 3 of your symbols in a row (horizontally, vertically, or
+                    diagonally) to win! Click the pencil icon next to player
+                    names to customize them.
+                </p>
+            </div>
         </div>
     </body>
 </html>
