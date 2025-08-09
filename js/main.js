@@ -1,21 +1,21 @@
 const gameBoard = (function () {
-    const generateBoard = (_emptyToken) => {
-        let _board = [];
+    const generateBoard = (emptyToken) => {
+        let board = [];
         for (let i = 0; i < 3; i++) {
-            _board[i] = [];
+            board[i] = [];
             for (let j = 0; j < 3; j++) {
-                _board[i].push(Cell(_emptyToken, i, j));
+                board[i].push(Cell(emptyToken, i, j));
             }
         }
 
-        return _board;
+        return board;
     };
 
-    const printBoard = (_board) => {
+    const printBoard = (board) => {
         let stringOutput = '';
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
-                const char = _board[i][j] == '' ? ' ' : _board[i][j];
+                const char = board[i][j] == '' ? ' ' : board[i][j].getToken();
                 if (j == 2) {
                     stringOutput += `\t${char}`;
                 } else {
@@ -34,8 +34,8 @@ const gameBoard = (function () {
     return { generateBoard, printBoard };
 })();
 
-function Cell(_emptyToken, i, j) {
-    let token = _emptyToken;
+function Cell(emptyToken, i, j) {
+    let token = emptyToken;
     const position = { row: i, column: j };
 
     const getToken = () => token;
