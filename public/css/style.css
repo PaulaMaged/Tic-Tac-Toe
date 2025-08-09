@@ -1,40 +1,45 @@
 html,
 body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+svg {
+    width: 100%;
+    height: auto;
 }
 
 .game-container {
-  display: grid;
-  height: 100%;
-  grid-template-columns: 1fr;
-  justify-items: center;
+    display: grid;
+    height: 100%;
+    grid-template-columns: 1fr;
+    justify-items: center;
 }
 
 .game-status {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 3fr;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 3fr;
 }
 
 .board {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  /* justify-items: center;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    /* justify-items: center;
   align-items: center; */
-  aspect-ratio: 1 / 1;
+    aspect-ratio: 1 / 1;
 }
 
 .cell-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid black;
 }
 
 .cell {
-  color: red;
-  font-size: xx-large;
+    color: red;
+    font-size: xx-large;
 }
