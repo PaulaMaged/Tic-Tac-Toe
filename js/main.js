@@ -155,16 +155,16 @@ const gameController = (function () {
 
         _board[i][j].setToken(_activePlayer.token);
 
-        _lastTurnStats.position = [i, j];
-        _lastTurnStats.player = _activePlayer.token;
-        _turn++;
-
         updateGameStatus();
         if (_gameStatus.isGameOver) {
             endGame();
             turnStatus.isValid = true;
             return turnStatus;
         }
+
+        _lastTurnStats.position = [i, j];
+        _lastTurnStats.player = _activePlayer.token;
+        _turn++;
 
         _activePlayer =
             _activePlayer === _players[0] ? _players[1] : _players[0];
@@ -286,7 +286,7 @@ const screenController = ((gameController) => {
         //Allows rendering last turn before ending game.
         setTimeout(() => {
             if (_gameStatus.isGameOver) {
-                alert('Game Over');
+                console.log(`Game Over: ${_gameStatus.gameOverReason}`);
                 setupNewRound();
             }
         }, 0);
