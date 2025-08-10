@@ -1,0 +1,22 @@
+.grid-game-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    aspect-ratio: 1/1;
+    padding: 0.5em;
+    gap: 0.25em;
+    border-radius: 2.5%;
+    background-color: #e5e5e5;
+}
+
+.grid-game-board__cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 2.5%;
+    padding: 5%;
+}
+
+.grid-game-board__marker {
+    font-size: 2em;
+}
