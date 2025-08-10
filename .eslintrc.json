@@ -17,6 +17,7 @@
     "rules": {
         "prettier/prettier": "error",
         "no-unused-vars": "warn",
-        "eqeqeq": "error"
+        "eqeqeq": "error",
+        "no-shadow": "warn"
     }
 }
