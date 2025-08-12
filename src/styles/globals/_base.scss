@@ -1,11 +1,26 @@
 html,
 body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
+    font-family: Arial, sans-serif;
 }
 
-svg {
-    width: 100%;
-    height: auto;
+#page-container {
+    flex: 1;
+    min-height: 100vh;
+}
+
+@media screen and (min-width: 320px) {
+    html {
+        font-size: calc(16px + 6 * ((100vw - 320px) / 680));
+    }
+}
+
+@media screen and (min-width: 1000px) {
+    html {
+        font-size: 22px;
+    }
+}
+
+p {
+    padding: 0;
+    margin: 0;
 }

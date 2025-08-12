@@ -1,0 +1,165 @@
+//Flex related properties
+
+.flex {
+    display: flex;
+}
+
+.flex-grow-auto {
+    flex: 1 1 auto;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.justify-start {
+    justify-content: flex-start;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-end {
+    justify-content: flex-end;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.justify-around {
+    justify-content: space-around;
+}
+
+.align-items-start {
+    align-items: flex-start;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.align-items-end {
+    align-items: flex-end;
+}
+
+//Gaps
+
+.gap-sm {
+    gap: 0.5rem;
+}
+
+.gap-md {
+    gap: 1rem;
+}
+
+.gap-lg {
+    gap: 2rem;
+}
+
+//Padding
+
+.padding-sm {
+    padding: 0.5rem;
+}
+
+.padding-md {
+    padding: 1rem;
+}
+
+.padding-lg {
+    padding: 2rem;
+}
+
+.padding-vertical-sm {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+.padding-vertical-md {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+.padding-vertical-lg {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.padding-horizontal-sm {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.padding-horizontal-md {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+.padding-horizontal-lg {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+//Margin
+
+.margin-sm {
+    margin: 0.5rem;
+}
+
+.margin-md {
+    margin: 1rem;
+}
+
+.margin-lg {
+    margin: 2rem;
+}
+
+.margin-vertical-sm {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.margin-vertical-md {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.margin-vertical-lg {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.margin-horizontal-sm {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+.margin-horizontal-md {
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+.margin-horizontal-lg {
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+//Border Radius
+
+.border-radius-sm {
+    border-radius: 0.5rem;
+}
+.border-radius-md {
+    border-radius: 1rem;
+}
+.border-radius-lg {
+    border-radius: 2rem;
+}
+
+.border-radius-oval {
+    border-radius: 50%;
+}
+
+//Text
+
+.text-center {
+    text-align: center;
+}
+
+//width and Height

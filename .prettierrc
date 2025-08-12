@@ -1,5 +1,8 @@
 {
     "semi": true,
     "singleQuote": true,
-    "tabWidth": 4
+    "tabWidth": 4,
+    "printWidth": 80,
+    "htmlWhitespaceSensitivity": "css",
+    "embeddedLanguageFormatting": "auto"
 }

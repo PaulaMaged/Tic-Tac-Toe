@@ -1,5 +1,6 @@
 .grid-game-board {
     display: grid;
+    width: calc(100% * 1 / 3);
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     aspect-ratio: 1/1;

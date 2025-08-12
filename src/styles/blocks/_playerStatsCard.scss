@@ -1,0 +1,19 @@
+.player-stats-card {
+    border: 1px solid grey;
+}
+
+.player-stats-card__name {
+    font-size: 1em;
+    font-weight: bold;
+    // white-space: nowrap;
+}
+
+.player-stats-card__edit-icon {
+    width: 1em;
+    vertical-align: -0.1em;
+}
+
+.player-stats-card__player-marker {
+    font-size: 1.5em;
+    font-weight: bold;
+}
