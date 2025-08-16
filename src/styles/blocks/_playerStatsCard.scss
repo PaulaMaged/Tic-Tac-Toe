@@ -11,8 +11,15 @@
 }
 
 .player-stats-card__edit-icon {
+    transition: transform 0.3s;
     width: 1em;
     vertical-align: -0.1em;
+    cursor: pointer;
+}
+
+.player-stats-card__edit-icon:hover {
+    transform: scale(1.05) rotate(8deg) translate(0.1rem, -0.1rem);
+    opacity: 80%;
 }
 
 .player-stats-card__player-marker {
