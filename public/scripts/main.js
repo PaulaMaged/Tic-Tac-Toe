@@ -258,13 +258,10 @@ const screenController = ((gameController) => {
             const gameCell = document.createElement('div');
             cells.push(gameCell);
             gameCell.textContent = '';
-            gameCell.classList.add('cell');
-            const gameCellContainer = document.createElement('div');
-            gameCellContainer.addEventListener('click', handleOnClick);
-            gameCellContainer.dataset.position = i.toString();
-            gameCellContainer.classList.add('cell-container');
-            gameCellContainer.appendChild(gameCell);
-            elBoard.appendChild(gameCellContainer);
+            gameCell.addEventListener('click', handleOnClick);
+            gameCell.dataset.position = i.toString();
+            gameCell.classList.add('grid-game-board__cell', 'border-radius-sm');
+            elBoard.appendChild(gameCell);
         }
 
         players[0].name = playerOneName;
@@ -343,7 +340,7 @@ screenController.init();
             /* HTML */
             `
                 <section
-                    class="player-stats-card flex-column gap-sm justify-start align-items-center border-radius-lg padding-horizontal-lg padding-vertical-md"
+                    class="player-stats-card gap-sm align-items-center border-radius-lg padding-horizontal-lg padding-vertical-md"
                 >
                     <p class="player-stats-card__name">
                         Player ${i == 1 ? 'One' : 'Two'}

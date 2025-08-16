@@ -1,12 +1,10 @@
 .grid-game-board {
     display: grid;
-    width: calc(100% * 1 / 3);
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    aspect-ratio: 1/1;
-    padding: 0.5em;
-    gap: 0.25em;
-    border-radius: 2.5%;
+    width: calc((1 / 3) * 100%);
+    max-width: 600px;
+    aspect-ratio: 1 / 1;
     background-color: #e5e5e5;
 }
 
@@ -14,8 +12,20 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 2.5%;
+    font-size: 3rem;
     padding: 5%;
+    background-color: whitesmoke;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.grid-game-board__cell:hover {
+    box-shadow: 0 0 0.5rem black;
+}
+
+.grid-game-board__cell:active {
+    transform: scale(0.95);
 }
 
 .grid-game-board__marker {

@@ -10,24 +10,35 @@
         <script src="scripts/main.js" defer></script>
     </head>
     <body class="flex-column">
-        <div id="page-container" class="flex-column gap-md">
-            <h1 class="game-title text-center margin-sm">Tic Tac Toe</h1>
+        <div id="page-container" class="flex-column gap-md align-items-center">
+            <h1 class="text-center margin-sm">Tic Tac Toe</h1>
             <div
                 id="players-stats-container"
                 class="flex justify-center gap-lg margin-horizontal-lg"
             ></div>
-            <div class="game-status"></div>
-            <div class="grid-game-board flex-grow-auto"></div>
+            <div class="game-status">
+                Hello there, Please start selecting cells
+            </div>
+            <div
+                class="grid-game-board gap-sm border-radius-sm padding-md"
+            ></div>
             <div class="control-buttons-container">
                 <button class="bt-new-game">New Game</button>
                 <button class="bt-reset-stats">Reset Stats</button>
             </div>
-            <div class="game-instructions-card">
-                <h4 class="game-instructions-header">How to Play:</h4>
-                <p class="game-instructions-paragraph">
+            <div
+                class="game-instructions-card padding-md border-radius-md margin-md"
+            >
+                <h4
+                    class=".game-instruction-card__game-instructions-header margin-bottom-sm"
+                >
+                    How to Play:
+                </h4>
+                <p class="game-instructions-card__game-instructions-paragraph">
                     Get 3 of your symbols in a row (horizontally, vertically, or
-                    diagonally) to win! Click the pencil icon next to player
-                    names to customize them.
+                    diagonally) to win! <br />
+                    Click the pencil icon next to player names to customize
+                    them.
                 </p>
             </div>
         </div>

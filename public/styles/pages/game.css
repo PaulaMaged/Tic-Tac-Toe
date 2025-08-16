@@ -1,3 +1,10 @@
+#page-container {
+  flex: 1;
+  min-height: 100vh;
+}
 
+#page-container > * {
+  flex: 0 1 auto;
+}
 
 /*# sourceMappingURL=game.css.map */

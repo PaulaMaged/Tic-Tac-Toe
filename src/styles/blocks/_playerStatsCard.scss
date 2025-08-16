@@ -1,11 +1,13 @@
 .player-stats-card {
+    display: flex;
+    flex-direction: column;
     border: 1px solid grey;
 }
 
 .player-stats-card__name {
     font-size: 1em;
-    font-weight: bold;
-    // white-space: nowrap;
+    white-space: nowrap;
+    // font-weight: bold;
 }
 
 .player-stats-card__edit-icon {

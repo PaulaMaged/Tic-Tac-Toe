@@ -5,3 +5,7 @@
 //Components
 @use 'blocks/gridGameBoard';
 @use 'blocks/playerStatsCard';
+@use 'blocks/_gameInstructionsCard.scss';
+
+//Pages
+@use 'pages/game';
