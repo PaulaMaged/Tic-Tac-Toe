@@ -1,3 +1,5 @@
 node_modules/
 .vscode
 Progress/
+public/styles/**/*.css*
+!public/styles/normalize.css

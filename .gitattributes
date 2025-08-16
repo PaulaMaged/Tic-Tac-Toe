@@ -1,2 +1,5 @@
 # Generated CSS files - always use LF
 public/styles/**/*.css text eol=lf
+
+# automatically generated files get their own file endings
+package-lock.json -text
