@@ -52,10 +52,6 @@ const gameController = (function () {
     const _emptyToken = '';
     let _players = null;
     let _activePlayer = null;
-    let _lastTurnStats = {
-        position: [],
-        player: null,
-    };
 
     let _turn = null;
 
@@ -104,21 +100,17 @@ const gameController = (function () {
         return _winningConfigurations;
     })();
 
-    const startNewGame = (
-        players = [
-            { name: 'Player One', token: 'X' },
-            { name: 'Player Two', token: 'O' },
-        ],
-        startingPlayer = players[0],
-    ) => {
+    /**
+     *
+     * @param {Array} players
+     */
+    const startNewGame = (players, startingPlayer) => {
         _board = gameBoard.generateBoard(_emptyToken);
 
         _players = players;
+
+        //enter the list of players with the first one being the first to play
         _activePlayer = startingPlayer;
-        _lastTurnStats = {
-            position: [],
-            player: null,
-        };
 
         _gameStatus = {
             isGameOver: false,
@@ -142,6 +134,8 @@ const gameController = (function () {
 
     const playTurn = (i, j) => {
         const turnStatus = {
+            player: _activePlayer,
+            position: [i, j],
             isValid: null,
             errorMessage: '',
         };
@@ -162,8 +156,6 @@ const gameController = (function () {
             return turnStatus;
         }
 
-        _lastTurnStats.position = [i, j];
-        _lastTurnStats.player = _activePlayer.token;
         _turn++;
 
         _activePlayer =
@@ -219,15 +211,10 @@ const gameController = (function () {
         return _gameStatus;
     }
 
-    function get_lastTurnStats() {
-        return _lastTurnStats;
-    }
-
     return {
         startNewGame,
         playTurn,
         getBoard,
-        get_lastTurnStats,
         getGameStatus,
     };
 })();
@@ -235,25 +222,37 @@ const gameController = (function () {
 const screenController = ((gameController) => {
     //Cache DOM elements
     const elBoard = document.querySelector('.grid-game-board');
+    const gameStatusEl = document.querySelector('.game-status');
+    const newGameButtonEl = document.querySelector('.bt-new-game');
+    let currentGameStatus = "Let's Play!";
+
     const cells = [];
+    let playerStartedLastTurn = null;
+
     const players = [
         {
             name: 'Player One',
+            token: 'X',
             wins: 0,
         },
         {
             name: 'Player Two',
+            token: 'O',
             wins: 0,
         },
     ];
 
     //create necessary layout for displaying information
-    const init = (
-        playerOneName = 'Player One',
-        playerTwoName = 'Player Two',
-    ) => {
-        gameController.startNewGame();
-        //create and add elements to status
+    const init = () => {
+        //randomely choose starting player & save it
+        const startingPlayerIndex = random(1);
+        const startingPlayer = players[startingPlayerIndex];
+        gameController.startNewGame(players, startingPlayer);
+        playerStartedLastTurn = startingPlayer;
+
+        writeToGameStatus(`Starting off with ${startingPlayer.name}!`);
+
+        //create and add elements to game board
         for (let i = 0; i < 9; i++) {
             const gameCell = document.createElement('div');
             cells.push(gameCell);
@@ -264,30 +263,28 @@ const screenController = ((gameController) => {
             elBoard.appendChild(gameCell);
         }
 
-        players[0].name = playerOneName;
-        players[1].name = playerTwoName;
+        //used if input is taken before initiating the game
+        // players[0].name = playerOneName;
+        // players[1].name = playerTwoName;
     };
 
     //render board and status (active player and win count)
-    const render = () => {
+    const updateCellContent = (cellIndex, player) => {
         //render last play
-        const _gameStatus = gameController.getGameStatus();
-        const _lastTurnStats = gameController.get_lastTurnStats();
-        const row = 0;
-        const column = 1;
-        const cellIndex =
-            _lastTurnStats.position[row] * 3 + _lastTurnStats.position[column];
 
-        cells[cellIndex].textContent = _lastTurnStats.player;
-
-        //Allows rendering last turn before ending game.
-        setTimeout(() => {
-            if (_gameStatus.isGameOver) {
-                console.log(`Game Over: ${_gameStatus.gameOverReason}`);
-                setupNewRound();
-            }
-        }, 0);
+        cells[cellIndex].innerHTML = playerHighlight(
+            player.token,
+            player.token,
+        );
     };
+
+    function playerHighlight(text, token) {
+        return `<span class="player${token}">${text}</span>`;
+    }
+
+    function writeToGameStatus(statusText) {
+        gameStatusEl.textContent = statusText;
+    }
 
     function random(number) {
         return Math.floor(Math.random() * (number + 1));
@@ -299,10 +296,29 @@ const screenController = ((gameController) => {
         const row = Math.trunc(ordinalPosition / 3);
         const column = ordinalPosition % 3;
         console.log({ ordinalPosition, row, column });
-        const turnStatus = gameController.playTurn(row, column);
+        const { player, isValid, errorMessage } = gameController.playTurn(
+            row,
+            column,
+        );
+        const _gameStatus = gameController.getGameStatus();
 
-        if (turnStatus.isValid) render();
-        else alert(turnStatus.errorMessage);
+        if (isValid) {
+            updateCellContent(ordinalPosition, player);
+        } else {
+            //create indicator of incorrect move... add an animation for a moment on the pressed cell
+            cells[ordinalPosition].classList.add('red-color');
+
+            // Remove the class after animation completes
+            setTimeout(() => {
+                cells[ordinalPosition].classList.remove('red-color');
+            }, 1000);
+        }
+
+        let gameStatusMessage;
+        //set game status
+        if (!_gameStatus.isGameOver) {
+            gameStatusMessage = `${playerHighlight(player.name)}'s Turn`;
+        }
     }
 
     function setupNewRound() {
@@ -310,11 +326,11 @@ const screenController = ((gameController) => {
             cell.textContent = '';
         }
 
-        gameController.startNewGame();
+        gameController.startNewGame(players);
     }
 
     const restartGame = () => {
-        gameController.startNewGame();
+        gameController.startNewGame(players);
     };
 
     return {
@@ -327,8 +343,6 @@ const screenController = ((gameController) => {
 screenController.init();
 
 //I want to have re-usable html snippets instead of repeating them by hand,
-//they should exist during static run of page, which means hard-coding all that repeating syntax,
-//and making sure that it is consistent with all other repeated parts.s
 
 (() => {
     const playerCardsContainer = document.querySelector(
