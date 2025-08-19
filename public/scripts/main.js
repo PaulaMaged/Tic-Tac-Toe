@@ -57,7 +57,7 @@ const gameController = (function () {
 
     let _gameStatus = {
         isGameOver: null,
-        gameOverReason: null,
+        gameWinner: null,
         winningConfiguration: null,
     };
 
@@ -114,7 +114,7 @@ const gameController = (function () {
 
         _gameStatus = {
             isGameOver: false,
-            gameOverReason: null,
+            gameWinner: null,
             winningConfiguration: null,
         };
 
@@ -190,14 +190,14 @@ const gameController = (function () {
 
             if (cell1 != _emptyToken && cell1 == cell2 && cell1 == cell3) {
                 _gameStatus.isGameOver = true;
-                _gameStatus.gameOverReason = _activePlayer.token;
+                _gameStatus.gameWinner = _activePlayer;
                 _gameStatus.winningConfiguration = configuration;
             }
         }
 
         if (_gameStatus.isGameOver == false && _turn == 9) {
             _gameStatus.isGameOver = true;
-            _gameStatus.gameOverReason = 2;
+            _gameStatus.gameWinner = null;
         }
     };
 
@@ -221,12 +221,13 @@ const gameController = (function () {
 
 const screenController = ((gameController) => {
     //Cache DOM elements
-    const elBoard = document.querySelector('.grid-game-board');
+    const boardEl = document.querySelector('.grid-game-board');
     const gameStatusEl = document.querySelector('.game-status');
     const newGameButtonEl = document.querySelector('.bt-new-game');
     let currentGameStatus = "Let's Play!";
 
     const cells = [];
+    const playerCards = [];
     let playerStartedLastTurn = null;
 
     const players = [
@@ -257,10 +258,72 @@ const screenController = ((gameController) => {
             const gameCell = document.createElement('div');
             cells.push(gameCell);
             gameCell.textContent = '';
-            gameCell.addEventListener('click', handleOnClick);
+            gameCell.addEventListener('click', handleUserMove);
             gameCell.dataset.position = i.toString();
             gameCell.classList.add('grid-game-board__cell', 'border-radius-sm');
-            elBoard.appendChild(gameCell);
+            boardEl.appendChild(gameCell);
+        }
+
+        //setup player cards:
+        const playerCardsContainer = document.querySelector(
+            '#players-stats-container',
+        );
+
+        for (let i = 0; i < 2; i++) {
+            const playerCardEl = document.createElement('section');
+
+            playerCardEl.className =
+                'player-stats-card gap-sm align-items-center border-radius-lg padding-horizontal-lg padding-vertical-md';
+
+            //flex item 1
+            const playerNameEl = document.createElement('p');
+            playerNameEl.className = 'player-stats-card__name';
+
+            const playerNameText = document.createTextNode(players[i].name);
+            playerNameEl.appendChild(playerNameText);
+            const SVG_NS = 'http://www.w3.org/2000/svg';
+
+            const editIconEl = document.createElementNS(SVG_NS, 'svg');
+            editIconEl.setAttribute('class', 'player-stats-card__edit-icon');
+            editIconEl.setAttribute('viewBox', '0 0 24 24');
+            editIconEl.setAttribute('fill', 'none');
+            // Now embed children with innerHTML
+            editIconEl.innerHTML = `
+                <path d="M12 8L4 16v4h4l8-8m-4-4l2.87-2.87c.4-.4.6-.6.83-.68.19-.06.4-.06.59 0 .23.08.43.28.83.68l1.74 1.74c.4.4.6.6.68.83.06.19.06.4 0 .59-.08.23-.28.43-.68.83L16 12m-4-4l4 4"
+                stroke="#000"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round" />
+            `;
+            playerNameEl.appendChild(editIconEl);
+
+            //flex item 2
+            const playerMarkerEl = document.createElement('p');
+            playerMarkerEl.className = 'player-stats-card__player-marker';
+            playerMarkerEl.innerHTML = playerHighlight(
+                players[i].token,
+                players[i].token,
+            );
+
+            //flex item 3
+            const playerWinsEl = document.createElement('p');
+            playerWinsEl.className = 'player-stats-card__player-score-text';
+            playerWinsEl.textContent = `Wins: `;
+
+            const playerWinsScoreEl = document.createElement('span');
+            playerWinsScoreEl.className =
+                'player-stats-card__player-score-value';
+            playerWinsScoreEl.textContent = '0';
+            playerWinsEl.appendChild(playerWinsScoreEl);
+
+            //cache elements for later use
+            players[i].DOMReferences = {
+                name: playerNameEl,
+                score: playerWinsScoreEl,
+            };
+
+            playerCardEl.append(playerNameEl, playerMarkerEl, playerWinsEl);
+            playerCardsContainer.appendChild(playerCardEl);
         }
 
         //used if input is taken before initiating the game
@@ -283,7 +346,7 @@ const screenController = ((gameController) => {
     }
 
     function writeToGameStatus(statusText) {
-        gameStatusEl.textContent = statusText;
+        gameStatusEl.innerHTML = statusText;
     }
 
     function random(number) {
@@ -291,7 +354,7 @@ const screenController = ((gameController) => {
     }
 
     //register events from clicking cells on game _board
-    function handleOnClick(e) {
+    function handleUserMove(e) {
         const ordinalPosition = e.currentTarget.dataset.position;
         const row = Math.trunc(ordinalPosition / 3);
         const column = ordinalPosition % 3;
@@ -300,11 +363,10 @@ const screenController = ((gameController) => {
             row,
             column,
         );
-        const _gameStatus = gameController.getGameStatus();
+        const { isGameOver, gameWinner, winningConfiguration } =
+            gameController.getGameStatus();
 
-        if (isValid) {
-            updateCellContent(ordinalPosition, player);
-        } else {
+        if (!isValid) {
             //create indicator of incorrect move... add an animation for a moment on the pressed cell
             cells[ordinalPosition].classList.add('red-color');
 
@@ -312,13 +374,33 @@ const screenController = ((gameController) => {
             setTimeout(() => {
                 cells[ordinalPosition].classList.remove('red-color');
             }, 1000);
+            return;
         }
+
+        updateCellContent(ordinalPosition, player);
 
         let gameStatusMessage;
         //set game status
-        if (!_gameStatus.isGameOver) {
+        if (!isGameOver) {
             gameStatusMessage = `${playerHighlight(player.name)}'s Turn`;
+        } else {
+            //handle game end
+
+            //disable all events
+            boardEl.classList.add('disabled-state');
+
+            //create a timed indicator to take the next recommended action
+
+            if (gameWinner == null) {
+                gameStatusMessage = `ma7adesh keseb ya showayet fashala🤣`;
+            } else {
+                gameStatusMessage = `${playerHighlight(gameWinner.name)} Won!🎊`;
+
+                //create a line along the winning configuration
+            }
         }
+
+        writeToGameStatus(gameStatusMessage);
     }
 
     function setupNewRound() {
@@ -340,49 +422,5 @@ const screenController = ((gameController) => {
     };
 })(gameController);
 
+//after html content is generated
 screenController.init();
-
-//I want to have re-usable html snippets instead of repeating them by hand,
-
-(() => {
-    const playerCardsContainer = document.querySelector(
-        '#players-stats-container',
-    );
-
-    for (let i = 1; i < 3; i++) {
-        const cardHTML =
-            /* HTML */
-            `
-                <section
-                    class="player-stats-card gap-sm align-items-center border-radius-lg padding-horizontal-lg padding-vertical-md"
-                >
-                    <p class="player-stats-card__name">
-                        Player ${i == 1 ? 'One' : 'Two'}
-                        <svg
-                            class="player-stats-card__edit-icon"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <g id="Edit / Edit_Pencil_01">
-                                <path
-                                    id="Vector"
-                                    d="M12 8.00012L4 16.0001V20.0001L8 20.0001L16 12.0001M12 8.00012L14.8686 5.13146L14.8704 5.12976C15.2652 4.73488 15.463 4.53709 15.691 4.46301C15.8919 4.39775 16.1082 4.39775 16.3091 4.46301C16.5369 4.53704 16.7345 4.7346 17.1288 5.12892L18.8686 6.86872C19.2646 7.26474 19.4627 7.46284 19.5369 7.69117C19.6022 7.89201 19.6021 8.10835 19.5369 8.3092C19.4628 8.53736 19.265 8.73516 18.8695 9.13061L18.8686 9.13146L16 12.0001M12 8.00012L16 12.0001"
-                                    stroke="#000000"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </g>
-                        </svg>
-                    </p>
-                    <p class="player-stats-card__player-marker">
-                        ${i == 1 ? 'X' : 'O'}
-                    </p>
-                    <p class="win-score">Wins: 0</p>
-                </section>
-            `;
-
-        playerCardsContainer.innerHTML += cardHTML;
-    }
-})();
