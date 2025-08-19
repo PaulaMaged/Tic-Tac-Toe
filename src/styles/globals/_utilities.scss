@@ -204,3 +204,13 @@
 }
 
 //width and Height
+
+//Interactions
+
+.disabled {
+    cursor: not-allowed; //visual only
+}
+
+.disabled-state {
+    pointer-events: none; //functional
+}
