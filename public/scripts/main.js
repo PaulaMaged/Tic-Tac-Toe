@@ -48,12 +48,39 @@ function Cell(emptyToken, i, j) {
     };
 }
 
+function createTurnStatus(player, position) {
+    let _isValid = true;
+    let _errorCode = null;
+    let _errorMessage = null;
+
+    function setInvalid(errorCode, errorMessage = '') {
+        _isValid = false;
+        _errorCode = errorCode;
+        _errorMessage = errorMessage;
+    }
+
+    const isValid = () => _isValid;
+    const getErrorCode = () => _errorCode;
+    const getErrorMessage = () => _errorMessage;
+
+    return {
+        player: player,
+        position: position,
+        isValid,
+        setInvalid,
+        getErrorCode,
+        getErrorMessage,
+    };
+}
+
 const gameController = (function () {
     const _emptyToken = '';
     let _players = null;
     let _activePlayer = null;
 
     let _turn = null;
+
+    let _turnStatus = null;
 
     let _gameStatus = {
         isGameOver: null,
@@ -118,6 +145,8 @@ const gameController = (function () {
             winningConfiguration: null,
         };
 
+        _turnStatus = null;
+
         _turn = 1;
     };
 
@@ -132,39 +161,51 @@ const gameController = (function () {
         return boardCopy;
     };
 
+    //trying to merge both the implementation of console and UI related aspects into one. This is especifically
+    //convoluted when the end of the game is reached for the console game and I need to display some stuff...
+    //I need to pass the responsibility of handling the messages to some other entity, possibly in a queue so that the
+    // order is preserved. But who will dictate whether it should be printed or not??? It usually early returns if the game
+    //ends in the console game which is problematic for the UI game.
     const playTurn = (i, j) => {
-        const turnStatus = {
-            player: _activePlayer,
-            position: [i, j],
-            isValid: null,
-            errorMessage: '',
-        };
+        //this is why I wanted to do a state machine,
+        // having these state checks and handling edge cases can get overwhelming
+
+        const turnStatus = createTurnStatus(_activePlayer, [i, j]);
+
+        if (_gameStatus.isGameOver) {
+            turnStatus.setInvalid(2, `Can't play after game is over`);
+            _turnStatus = turnStatus;
+            return;
+        }
 
         if (!isValidMove(i, j)) {
-            turnStatus.errorMessage =
-                'Action is invalid, please choose an empty space';
-            turnStatus.isValid = false;
-            return turnStatus;
+            turnStatus.setInvalid(1, `Can't overwrite another player's marker`);
+            _turnStatus = turnStatus;
+            return;
         }
 
         _board[i][j].setToken(_activePlayer.token);
 
         updateGameStatus();
+
         if (_gameStatus.isGameOver) {
             endGame();
-            turnStatus.isValid = true;
-            return turnStatus;
+            _turnStatus = turnStatus;
+            return;
         }
 
-        _turn++;
+        _turnStatus = turnStatus;
 
-        _activePlayer =
-            _activePlayer === _players[0] ? _players[1] : _players[0];
+        setupNextTurn();
+    };
+
+    function setupNextTurn() {
         console.log(`${_activePlayer.name}'s _Turn`);
 
-        turnStatus.isValid = true;
-        return turnStatus;
-    };
+        _turn++;
+        _activePlayer =
+            _activePlayer === _players[0] ? _players[1] : _players[0];
+    }
 
     const isValidMove = (i, j) => {
         console.log({ i, j });
@@ -207,14 +248,28 @@ const gameController = (function () {
         console.log(`${_activePlayer.name}:`);
     };
 
+    function getTurnStatus() {
+        return {
+            player: _turnStatus.player,
+            position: getCellPosition1D(_turnStatus.position),
+            isValid: _turnStatus.isValid(),
+            errorCode: _turnStatus.getErrorCode(),
+            errorMessage: _turnStatus.getErrorMessage(),
+        };
+    }
+
     function getGameStatus() {
         return _gameStatus;
     }
+
+    const getActivePlayer = () => _activePlayer;
 
     return {
         startNewGame,
         playTurn,
         getBoard,
+        getActivePlayer,
+        getTurnStatus,
         getGameStatus,
     };
 })();
@@ -223,12 +278,11 @@ const screenController = ((gameController) => {
     //Cache DOM elements
     const boardEl = document.querySelector('.grid-game-board');
     const gameStatusEl = document.querySelector('.game-status');
-    const newGameButtonEl = document.querySelector('.bt-new-game');
+
     let currentGameStatus = "Let's Play!";
 
     const cells = [];
-    const playerCards = [];
-    let playerStartedLastTurn = null;
+    let playerStartedLastGame = null;
 
     const players = [
         {
@@ -245,91 +299,178 @@ const screenController = ((gameController) => {
 
     //create necessary layout for displaying information
     const init = () => {
-        //randomely choose starting player & save it
-        const startingPlayerIndex = random(1);
-        const startingPlayer = players[startingPlayerIndex];
-        gameController.startNewGame(players, startingPlayer);
-        playerStartedLastTurn = startingPlayer;
+        initializeGameState();
+        createGridCells();
+        createPlayerCards();
+        setupGameControlButtonListeners();
 
-        writeToGameStatus(`Starting off with ${startingPlayer.name}!`);
-
-        //create and add elements to game board
-        for (let i = 0; i < 9; i++) {
-            const gameCell = document.createElement('div');
-            cells.push(gameCell);
-            gameCell.textContent = '';
-            gameCell.addEventListener('click', handleUserMove);
-            gameCell.dataset.position = i.toString();
-            gameCell.classList.add('grid-game-board__cell', 'border-radius-sm');
-            boardEl.appendChild(gameCell);
+        function initializeGameState() {
+            //randomely choose starting player & save it
+            const startingPlayerIndex = random(1);
+            const startingPlayer = players[startingPlayerIndex];
+            playerStartedLastGame = startingPlayer;
+            startGame(startingPlayer);
         }
 
-        //setup player cards:
-        const playerCardsContainer = document.querySelector(
-            '#players-stats-container',
-        );
+        function createGridCells() {
+            //create and add elements to game board
+            for (let i = 0; i < 9; i++) {
+                const gameCell = document.createElement('div');
+                cells.push(gameCell);
+                gameCell.textContent = '';
+                gameCell.addEventListener('click', handleUserCellInteraction);
+                gameCell.dataset.position = i.toString();
+                gameCell.classList.add(
+                    'grid-game-board__cell',
+                    'border-radius-sm',
+                );
+                boardEl.appendChild(gameCell);
+            }
+        }
 
-        for (let i = 0; i < 2; i++) {
-            const playerCardEl = document.createElement('section');
+        function createPlayerCards() {
+            //setup player cards:
+            const playerCardsContainer = document.querySelector(
+                '#players-stats-container',
+            );
 
-            playerCardEl.className =
-                'player-stats-card gap-sm align-items-center border-radius-lg padding-horizontal-lg padding-vertical-md';
+            for (let i = 0; i < 2; i++) {
+                const playerCardEl = document.createElement('section');
 
-            //flex item 1
-            const playerNameEl = document.createElement('p');
-            playerNameEl.className = 'player-stats-card__name';
+                playerCardEl.className =
+                    'player-stats-card gap-sm align-items-center border-radius-lg padding-horizontal-lg padding-vertical-md';
 
-            const playerNameText = document.createTextNode(players[i].name);
-            playerNameEl.appendChild(playerNameText);
-            const SVG_NS = 'http://www.w3.org/2000/svg';
+                //flex item 1
+                const playerNameEl = document.createElement('p');
+                playerNameEl.className = 'player-stats-card__name-block';
 
-            const editIconEl = document.createElementNS(SVG_NS, 'svg');
-            editIconEl.setAttribute('class', 'player-stats-card__edit-icon');
-            editIconEl.setAttribute('viewBox', '0 0 24 24');
-            editIconEl.setAttribute('fill', 'none');
-            // Now embed children with innerHTML
-            editIconEl.innerHTML = `
+                const playerNameTextEl = document.createElement('span');
+                playerNameTextEl.classList.add('player-stats-card__name-text');
+                playerNameTextEl.textContent = players[i].name;
+                playerNameEl.appendChild(playerNameTextEl);
+
+                const editNameButton = document.createElement('button');
+                editNameButton.classList.add('player-stats-card__button');
+
+                editNameButton.addEventListener('click', (e) =>
+                    changeName(e.currentTarget.parentElement),
+                );
+
+                const SVG_NS = 'http://www.w3.org/2000/svg';
+
+                const editIconEl = document.createElementNS(SVG_NS, 'svg');
+                editIconEl.setAttribute(
+                    'class',
+                    'player-stats-card__edit-icon',
+                );
+                editIconEl.setAttribute('viewBox', '0 0 24 24');
+                editIconEl.setAttribute('fill', 'none');
+                // Now embed children with innerHTML
+                editIconEl.innerHTML = `
                 <path d="M12 8L4 16v4h4l8-8m-4-4l2.87-2.87c.4-.4.6-.6.83-.68.19-.06.4-.06.59 0 .23.08.43.28.83.68l1.74 1.74c.4.4.6.6.68.83.06.19.06.4 0 .59-.08.23-.28.43-.68.83L16 12m-4-4l4 4"
                 stroke="#000"
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round" />
             `;
-            playerNameEl.appendChild(editIconEl);
 
-            //flex item 2
-            const playerMarkerEl = document.createElement('p');
-            playerMarkerEl.className = 'player-stats-card__player-marker';
-            playerMarkerEl.innerHTML = playerHighlight(
-                players[i].token,
-                players[i].token,
+                editNameButton.appendChild(editIconEl);
+                playerNameEl.appendChild(editNameButton);
+
+                //flex item 2
+                const playerMarkerEl = document.createElement('p');
+                playerMarkerEl.className = 'player-stats-card__player-marker';
+                playerMarkerEl.innerHTML = playerHighlight(
+                    players[i].token,
+                    players[i].token,
+                );
+
+                //flex item 3
+                const playerWinsEl = document.createElement('p');
+                playerWinsEl.className = 'player-stats-card__player-score-text';
+                playerWinsEl.textContent = `Wins: `;
+
+                const playerWinsScoreEl = document.createElement('span');
+                playerWinsScoreEl.className =
+                    'player-stats-card__player-score-value';
+                playerWinsScoreEl.textContent = '0';
+                playerWinsEl.appendChild(playerWinsScoreEl);
+
+                //cache elements for later use
+                players[i].DOMReferences = {
+                    nameEl: playerNameEl,
+                    scoreEl: playerWinsScoreEl,
+                };
+
+                playerCardEl.append(playerNameEl, playerMarkerEl, playerWinsEl);
+                playerCardsContainer.appendChild(playerCardEl);
+            }
+        }
+
+        function changeName(parentEl) {
+            const playerNameTextEl = parentEl.querySelector(
+                '.player-stats-card__name-text',
+            );
+            playerNameTextEl.classList.add('hide');
+            const inputEl = document.createElement('input');
+            inputEl.setAttribute('type', 'text');
+            inputEl.setAttribute('pattern', '[A-Za-z0-9_-]{3,10}');
+            inputEl.setAttribute(
+                'title',
+                "3-10 alphanumeric characters and '-' or '_'",
             );
 
-            //flex item 3
-            const playerWinsEl = document.createElement('p');
-            playerWinsEl.className = 'player-stats-card__player-score-text';
-            playerWinsEl.textContent = `Wins: `;
+            parentEl.insertBefore(inputEl, parentEl.childNodes[0]);
+            inputEl.focus();
+        }
 
-            const playerWinsScoreEl = document.createElement('span');
-            playerWinsScoreEl.className =
-                'player-stats-card__player-score-value';
-            playerWinsScoreEl.textContent = '0';
-            playerWinsEl.appendChild(playerWinsScoreEl);
+        function setupGameControlButtonListeners() {
+            const newGameButtonEl = document.querySelector('.bt-new-game');
+            const resetGameButton = document.querySelector('.bt-reset-stats');
 
-            //cache elements for later use
-            players[i].DOMReferences = {
-                name: playerNameEl,
-                score: playerWinsScoreEl,
-            };
-
-            playerCardEl.append(playerNameEl, playerMarkerEl, playerWinsEl);
-            playerCardsContainer.appendChild(playerCardEl);
+            newGameButtonEl.addEventListener('click', () => {
+                startGame();
+            });
+            resetGameButton.addEventListener('click', () => {
+                startGame();
+                clearStats();
+            });
         }
 
         //used if input is taken before initiating the game
         // players[0].name = playerOneName;
         // players[1].name = playerTwoName;
     };
+
+    function startGame(startingPlayer = getNextPlayer(playerStartedLastGame)) {
+        clearGame();
+        setBoardInteractivity(true);
+        playerStartedLastGame = startingPlayer;
+        gameController.startNewGame(players, startingPlayer);
+        writeToGameStatus(`Starting off with ${startingPlayer.name}!`);
+    }
+
+    function clearStats() {
+        players.forEach((player) => {
+            player.wins = 0;
+        });
+
+        displayScores();
+    }
+
+    function displayScores() {
+        players.forEach((player) => {
+            player.DOMReferences.scoreEl.textContent = player.wins;
+        });
+    }
+
+    function clearGame() {
+        for (let cell of cells) {
+            cell.textContent = '';
+        }
+
+        writeToGameStatus('');
+    }
 
     //render board and status (active player and win count)
     const updateCellContent = (cellIndex, player) => {
@@ -353,32 +494,74 @@ const screenController = ((gameController) => {
         return Math.floor(Math.random() * (number + 1));
     }
 
-    //register events from clicking cells on game _board
-    function handleUserMove(e) {
-        const ordinalPosition = e.currentTarget.dataset.position;
-        const row = Math.trunc(ordinalPosition / 3);
-        const column = ordinalPosition % 3;
-        console.log({ ordinalPosition, row, column });
-        const { player, isValid, errorMessage } = gameController.playTurn(
-            row,
-            column,
-        );
-        const { isGameOver, gameWinner, winningConfiguration } =
-            gameController.getGameStatus();
+    function handleUserCellInteraction(e) {
+        const singleIndex = e.currentTarget.dataset.position;
+        handleMove(singleIndex);
+    }
 
-        if (!isValid) {
-            //create indicator of incorrect move... add an animation for a moment on the pressed cell
-            cells[ordinalPosition].classList.add('red-color');
+    /**
+     *
+     * @param {number} cellIndex: a one dimensional index representing the cell's location
+     * @returns null
+     */
+    function handleMove(cellIndex) {
+        const gridCoordinates = getCellPosition2D(cellIndex);
+        gameController.playTurn(...gridCoordinates);
+        const turnStatus = gameController.getTurnStatus();
+        const gameStatus = gameController.getGameStatus();
 
-            // Remove the class after animation completes
-            setTimeout(() => {
-                cells[ordinalPosition].classList.remove('red-color');
-            }, 1000);
-            return;
+        if (!turnStatus.isValid) {
+            displayInvalidMoveFeedback(cellIndex, {
+                errorCode: turnStatus.errorCode,
+                errorMessage: turnStatus.errorMessage,
+                isValid: turnStatus.isValid,
+            });
+        } else {
+            updateUIAfterMove(turnStatus, gameStatus);
+        }
+    }
+
+    function updateUIAfterMove(turnStatus, gameStatus) {
+        const { player, position } = turnStatus;
+        const { isGameOver, gameWinner, winningConfiguration } = gameStatus;
+
+        if (isGameOver) {
+            updateScore(gameWinner);
+            highlightStreak(winningConfiguration);
+            setBoardInteractivity(false);
         }
 
-        updateCellContent(ordinalPosition, player);
+        updateCellContent(position, player);
+        updateGameStatusMessage(
+            isGameOver,
+            gameController.getActivePlayer(),
+            gameWinner,
+        );
+    }
 
+    /**
+     * Creates an SVG element over the grid container and finds cell locations to draw a line over.
+     * The goal is to create a line from the center of each end point cell.
+     * @param {Array} streak The cells involved
+     */
+    function highlightStreak(streak) {}
+
+    function updateScore(player) {
+        if (typeof player?.wins !== 'number') return;
+
+        player.wins++;
+        displayScores();
+    }
+
+    function setBoardInteractivity(active) {
+        if (active === true) {
+            boardEl.classList.remove('disabled-state');
+        } else {
+            boardEl.classList.add('disabled-state');
+        }
+    }
+
+    function updateGameStatusMessage(isGameOver, player, gameWinner) {
         let gameStatusMessage;
         //set game status
         if (!isGameOver) {
@@ -403,24 +586,28 @@ const screenController = ((gameController) => {
         writeToGameStatus(gameStatusMessage);
     }
 
-    function setupNewRound() {
-        for (let cell of cells) {
-            cell.textContent = '';
-        }
+    /**
+     *
+     * @param {number} position used to locate cell
+     */
+    function displayInvalidMoveFeedback(position, errorObject) {
+        const cell = cells[position];
 
-        gameController.startNewGame(players);
+        cell.classList.add('red-color');
+
+        // Remove the class after animation completes
+        setTimeout(() => {
+            cell.classList.remove('red-color');
+        }, 1000);
     }
 
-    const restartGame = () => {
-        gameController.startNewGame(players);
+    const getNextPlayer = (currentPlayer) => {
+        return players.find((player) => player != currentPlayer);
     };
 
     return {
         init,
-        setupNewRound,
-        restartGame,
     };
 })(gameController);
 
-//after html content is generated
 screenController.init();

@@ -4,22 +4,36 @@
     border: 1px solid grey;
 }
 
-.player-stats-card__name {
+.player-stats-card__name-block {
     font-size: 1em;
     white-space: nowrap;
     // font-weight: bold;
 }
 
+.player-stats-card__name-text {
+    background-color: grey;
+}
+
+.player-stats-card__button {
+    line-height: 0;
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+    vertical-align: top;
+}
+
 .player-stats-card__edit-icon {
-    transition: transform 0.3s;
+    transition:
+        transform 0.3s,
+        opacity 0.5s;
     width: 0.75rem;
     vertical-align: top;
     cursor: pointer;
 }
 
-.player-stats-card__edit-icon:hover {
+.player-stats-card__button:hover .player-stats-card__edit-icon {
     transform: scale(1.05) rotate(8deg) translate(0.1rem, -0.1rem);
-    opacity: 80%;
+    opacity: 70%;
 }
 
 .player-stats-card__player-marker {
