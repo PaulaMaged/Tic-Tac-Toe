@@ -278,6 +278,7 @@ const screenController = ((gameController) => {
     //Cache DOM elements
     const boardEl = document.querySelector('.grid-game-board');
     const gameStatusEl = document.querySelector('.game-status');
+    const playerCardEls = [];
 
     let currentGameStatus = "Let's Play!";
 
@@ -289,11 +290,13 @@ const screenController = ((gameController) => {
             name: 'Player One',
             token: 'X',
             wins: 0,
+            DOMReferences: null,
         },
         {
             name: 'Player Two',
             token: 'O',
             wins: 0,
+            DOMReferences: null,
         },
     ];
 
@@ -337,6 +340,7 @@ const screenController = ((gameController) => {
             for (let i = 0; i < 2; i++) {
                 const playerCardEl = document.createElement('section');
 
+                playerCardEl.setAttribute('data-player-index', i.toString());
                 playerCardEl.className =
                     'player-stats-card gap-sm align-items-center border-radius-lg padding-horizontal-lg padding-vertical-md';
 
@@ -353,7 +357,7 @@ const screenController = ((gameController) => {
                 editNameButton.classList.add('player-stats-card__button');
 
                 editNameButton.addEventListener('click', (e) =>
-                    changeName(e.currentTarget.parentElement),
+                    changeNameUI(e.currentTarget.parentElement),
                 );
 
                 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -398,16 +402,17 @@ const screenController = ((gameController) => {
 
                 //cache elements for later use
                 players[i].DOMReferences = {
-                    nameEl: playerNameEl,
+                    nameEl: playerNameTextEl,
                     scoreEl: playerWinsScoreEl,
                 };
 
                 playerCardEl.append(playerNameEl, playerMarkerEl, playerWinsEl);
                 playerCardsContainer.appendChild(playerCardEl);
+                playerCardEls.push(playerCardEl);
             }
         }
 
-        function changeName(parentEl) {
+        function changeNameUI(parentEl) {
             const playerNameTextEl = parentEl.querySelector(
                 '.player-stats-card__name-text',
             );
@@ -422,6 +427,49 @@ const screenController = ((gameController) => {
 
             parentEl.insertBefore(inputEl, parentEl.childNodes[0]);
             inputEl.focus();
+
+            inputEl.addEventListener('blur', (e) => {
+                e.target.remove();
+                playerNameTextEl.classList.remove('hide');
+            });
+
+            inputEl.addEventListener('keydown', (e) => {
+                if (e.key != 'Enter') return;
+
+                const newName = e.target.value;
+                if (!isValidName(newName)) return;
+
+                let playerIndex = null;
+
+                //get Player
+                const playerCardEl = playerCardEls.find((cardEl) =>
+                    cardEl.contains(e.target),
+                );
+                if (playerCardEl != undefined) {
+                    playerIndex =
+                        playerCardEl.getAttribute('data-player-index');
+                } else {
+                    alert(
+                        "Couldn't find player card related to this input field",
+                    );
+                    return;
+                }
+
+                const player = players[playerIndex];
+                let processedNewPlayerName = newName;
+                processedNewPlayerName = processedNewPlayerName.trim();
+                player.name = processedNewPlayerName;
+                player.DOMReferences.nameEl.textContent =
+                    processedNewPlayerName;
+
+                e.target.blur();
+            });
+        }
+
+        function isValidName(name) {
+            if (name.trim().length == 0) return false;
+
+            return true;
         }
 
         function setupGameControlButtonListeners() {
