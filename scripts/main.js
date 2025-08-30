@@ -419,7 +419,8 @@ const screenController = ((gameController) => {
             playerNameTextEl.classList.add('hide');
             const inputEl = document.createElement('input');
             inputEl.setAttribute('type', 'text');
-            inputEl.setAttribute('pattern', '[A-Za-z0-9_-]{3,10}');
+            //hyphen not allowed as a literal character for some reaosn
+            inputEl.setAttribute('pattern', '[A-Za-z0-9_]{3,10}');
             inputEl.setAttribute(
                 'title',
                 "3-10 alphanumeric characters and '-' or '_'",
