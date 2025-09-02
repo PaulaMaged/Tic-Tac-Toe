@@ -356,9 +356,13 @@ const screenController = ((gameController) => {
                 const editNameButton = document.createElement('button');
                 editNameButton.classList.add('player-stats-card__button');
 
-                editNameButton.addEventListener('click', (e) =>
-                    changeNameUI(e.currentTarget.parentElement),
-                );
+                editNameButton.addEventListener('click', (e) => {
+                    const targetEl = e.currentTarget;
+                    changeNameUI(targetEl.parentElement);
+                    targetEl.classList.add(
+                        'player-stats-card__edit-icon-final',
+                    );
+                });
 
                 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -430,8 +434,11 @@ const screenController = ((gameController) => {
             inputEl.focus();
 
             inputEl.addEventListener('blur', (e) => {
-                e.target.remove();
                 playerNameTextEl.classList.remove('hide');
+                e.currentTarget.parentElement
+                    .querySelector('.player-stats-card__edit-icon-final')
+                    .classList.remove('player-stats-card__edit-icon-final');
+                e.currentTarget.remove();
             });
 
             inputEl.addEventListener('keydown', (e) => {
