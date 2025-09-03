@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "main": "main.js",
     "scripts": {
+        "sass:build": "sass --load-path=node_modules src/styles:public/styles",
         "sass:watch": "sass --load-path=node_modules --watch src/styles:public/styles"
     },
     "keywords": [],
